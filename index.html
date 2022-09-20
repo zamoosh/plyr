@@ -7,78 +7,60 @@
         <link rel="stylesheet" href="./static/assets/css/bootstrap.css">
         <link rel="stylesheet" href="./static/assets/css/bootstrap-icons/bootstrap-icons.css">
         
-        <!--         <link rel="stylesheet" href="https://cdn.plyr.io/3.7.2/plyr.css" /> -->
         <link rel="stylesheet" href="./static/assets/plugins/plyr/plyr.css" />
         
         <title>player</title>
         <style>
-            * {
-                box-sizing: border-box;
+            
+            .plyr__controls {
+                /*background-image: url("./static/assets/qr.png") !important;*/
+                /*background-position: center !important;*/
+                /*background-size: 100px !important;*/
+                /*background-repeat: no-repeat !important;*/
+                /*background: url('./static/assets/qr_new.png') top no-repeat, linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .5)) !important;*/
+                /*background-size: 60px 60px, auto !important;*/
             }
             
-            ul {
-                padding: 0 20px;
-            }
+            /*.plyr__video-wrapper::before {*/
+            /*    position: absolute;*/
+            /*    top: 30px;*/
+            /*    left: 30px;*/
+            /*    z-index: 10;*/
+            /*    content: url('./static/assets/vidan-logo-shape.svg');*/
+            /*    opacity: 0.2;*/
+            /*}*/
             
-            li {
-                display: inline;
-            }
-            
-            
-            #bookmark_container {
-                position: relative;
-            }
-            
-            span.bookmark {
+            .plyr__video-wrapper::before {
                 position: absolute;
-                color: red;
-                transform: scale(1.6, 1.6);
-                z-index: 99;
-                top: 11px;
-                cursor: pointer;
+                top: 25px;
+                left: 25px;
+                z-index: 10;
+                content: '';
+                height: 16%;
+                width: 11%;
+                background: url('./static/assets/vidan-logo-shape.svg') no-repeat;
+                opacity: 0.5;
             }
             
-            
-            figure > #controllers {
-                position: absolute;
-                top: calc(91%);
-            }
-            
-            figure > #controllers #play_pause i {
-                font-size: 35px;
-            }
-            
-            figure > #controllers .progress_bar,
-            figure > #controllers .time {
-                padding-top: 12px;
-            }
-            
-            #progress {
-                filter: hue-rotate(5deg);
-                border: 1px solid #bebebe70;
-                width: 100%;
-                height: 7px;
-                border-radius: 4px;
-                background-color: transparent;
-                cursor: pointer;
-            }
         </style>
     </head>
     <body>
         
         <div class="container-fluid">
             <div class="container mt-4">
-                
-                <h3 class="ali" style="color: red; position: absolute; z-index: 9999999999999999999999">sdfe</h3>
-                <video id="player" controls data-poster="hosein_mohammadi.png">
-                    <source src="mov_bbb.mp4" type="video/mp4" />
-                    <source src="mov_bbb.mp4" type="video/webm" />
+    
+                <video playsinline
+                       id="player"
+                       controls
+                       data-poster="">
+                    <source src="./static/assets/videos/sea_640.mp4" type="video/mp4" size="640" />
+                    <source src="./static/assets/videos/sea_960.mp4" type="video/mp4" size="960" />
+                    <source src="./static/assets/videos/sea_1280.mp4" type="video/mp4" size="1280" />
                     
                     <!-- Captions are optional -->
                     <!-- <track kind="captions" label="English captions" src="/path/to/captions.vtt" srclang="en" default /> -->
+                    <track src="">
                 </video>
-                
-                
                 <!-- <figure id="container" class="position-relative">
                     <h3 style="color: red; position: absolute">sdfe</h3>
                     <video class="w-100 img-fluid rounded"
@@ -147,20 +129,56 @@
                  <button id="fs" type="button">Fullscreen</button>
              </li>
          </ul> -->
-        
-        <script src="./static/assets/plugins/plyr/plyr.polyfilled.js"></script>
-        
+    
+    
         <script src="./static/assets/js/bootstrap.js"></script>
         <script src="./static/assets/js/bootstrap.bundle.js"></script>
-        
+        <script src="./static/assets/plugins/plyr/plyr.polyfilled.js"></script>
+    
         <script>
             window.addEventListener('load', function () {
+                let video = document.getElementById('player');
+                function togglePictureInPicture() {
+                    if (document.pictureInPictureElement) {
+                        document.exitPictureInPicture();
+                    } else if (document.pictureInPictureEnabled) {
+                        video.requestPictureInPicture();
+                    }
+                }
+                togglePictureInPicture()
+
                 const player = new Plyr('#player', {
+                    settings: ['captions', 'quality', 'speed'],
+                    controls: [
+                        'play-large',
+                        'play',
+                        'rewind',
+                        'fast-forward',
+                        'restart',
+                        'progress',
+                        'current-time',
+                        'mute', 'volume',
+                        'captions',
+                        'settings', 'pip',
+                        'airplay',
+                        'fullscreen',
+                    ],
+                    hideControls: false,
+                    quality: {
+                        default: 1280,
+                        // The options to display in the UI, if available for the source media
+                        options: [1280, 960, 640],
+                        forced: true,
+                        onChange: null
+                    },
                     title: 'ali ali ali',
-                    previewThumbnails: {enabled: false, src: ''},
+                    previewThumbnails: {
+                        enabled: false,
+                        src: ''
+                    },
                     speed: {
                         selected: 1,
-                        options: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4, 5, 6, 7]
+                        options: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4]
                     },
                     markers: {
                         enabled: true,
@@ -180,7 +198,41 @@
                     },
                     clickToPlay: true
                 });
-                let container = document.getElementById('container');
+                let progress_bar = document.querySelector('div.plyr__progress');
+                let progress_input = progress_bar.childNodes[0];
+                video.addEventListener('timeupdate', function () {
+                    console.log(progress_input.getAttribute('aria-valuenow'));
+                });
+                
+                // player.source = {
+                //     type: 'video',
+                //     sources: [
+                //         {
+                //             src: 'bTqVqk7FSmY',
+                //             provider: 'youtube'
+                //         }
+                //     ]
+                // };
+                
+                // setTimeout(function () {
+                //     let html = `<div class="video" style="position: absolute; top: 0px; left: 5px; font-size:10px; color: #fff; z-index:10">My Website Name</div>`;
+                //     let plyr_controls = document.querySelector('.plyr__controls');
+                //     plyr_controls.after(html);
+                // }, 2000);
+                
+                let b = document.querySelector('button[data-plyr="fullscreen"]');
+                b.addEventListener('click', function () {
+                    // let plyr_full_page = document.querySelector('div.plyr--full-ui');
+                    // let inner_html = plyr_full_page.innerHTML;
+                    // let item = `<h3 class="ali" style="color: red; position: absolute; z-index: 999">sdfe</h3>`;
+                    // let new_inner_html = item;
+                    // new_inner_html += inner_html;
+                    // plyr_full_page.innerHTML = new_inner_html;
+                    // console.log(plyr_full_page);
+                });
+                
+                
+                /*let container = document.getElementById('container');
                 let video = document.getElementById('video');
                 let fullscreen = document.getElementById('fs');
                 let play_pause = document.getElementById('play_pause');
@@ -282,7 +334,7 @@
                     } else if (container.mozRequestFullScreen) {
                         container.mozRequestFullScreen();
                     }
-                });
+                });*/
             });
         </script>
     </body>

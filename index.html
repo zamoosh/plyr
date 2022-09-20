@@ -42,13 +42,48 @@
                 opacity: 0.5;
             }
             
+            .music {
+                width: 100px;
+            }
+            
+            .music_cover {
+                height: 200px;
+                width: 100%;
+                position: relative;
+                background-color: #ffffff7d;
+                border-radius: 5px 5px 0 0;
+            }
+
+            @keyframes round {
+                from {
+                    transform: rotate(0deg);
+                }
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+            
+            .cover_image {
+                animation-name: round;
+                animation-duration: 4s;
+                animation-iteration-count: infinite;
+                animation-timing-function: linear;
+            }
+            
+            .paused {
+                -webkit-animation-play-state: paused;
+                -moz-animation-play-state: paused;
+                -o-animation-play-state: paused;
+                animation-play-state: paused;
+            }
+            
         </style>
     </head>
-    <body>
+    <body style="background-color: #353535;">
         
         <div class="container-fluid">
             <div class="container mt-4">
-    
+                <!-- for movies -->
                 <video playsinline
                        id="player"
                        controls
@@ -61,75 +96,32 @@
                     <!-- <track kind="captions" label="English captions" src="/path/to/captions.vtt" srclang="en" default /> -->
                     <track src="">
                 </video>
-                <!-- <figure id="container" class="position-relative">
-                    <h3 style="color: red; position: absolute">sdfe</h3>
-                    <video class="w-100 img-fluid rounded"
-                           id="video"
-                           preload="metadata">
-                        <source type="video/mp4" src="mov_bbb.mp4">
-                        <a href="mov_bbb.mp4">Download MP4</a>
-                    </video>
-                    <div class="w-100" id="controllers">
-                        <div class="w-100 d-flex col-12 px-2">
-                            &lt;!&ndash; play pause button &ndash;&gt;
-                            <div class="text-white"
-                                 id="play_pause">
-                                <i class="bi bi-play-fill text-white play"
-                                   role="button"></i>
+                
+                <!-- for musics -->
+                <!-- <br><br><br><br><br><br><br><br><br><br>
+                <div class="w-100 d-flex justify-content-center">
+                    <div class="w-50">
+                        <div class="music_cover d-flex justify-content-center align-items-center">
+                            <div class="cover_image paused text-center w-50">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="90"
+                                     height="90"
+                                     fill="currentColor"
+                                     class="bi bi-music-note-beamed"
+                                     viewBox="0 0 16 16">
+                                    <path d="M6 13c0 1.105-1.12 2-2.5 2S1 14.105 1 13c0-1.104 1.12-2 2.5-2s2.5.896 2.5 2zm9-2c0 1.105-1.12 2-2.5 2s-2.5-.895-2.5-2 1.12-2 2.5-2 2.5.895 2.5 2z" />
+                                    <path fill-rule="evenodd" d="M14 11V2h1v9h-1zM6 3v10H5V3h1z" />
+                                    <path d="M5 2.905a1 1 0 0 1 .9-.995l8-.8a1 1 0 0 1 1.1.995V3L5 4V2.905z" />
+                                </svg>
                             </div>
-                            
-                            &lt;!&ndash; progress bar &ndash;&gt;
-                            <div class="w-75 progress_bar">
-                                <div id="bookmark_container"></div>
-                                <progress id="progress"
-                                    value="0"
-                                    min="0">
-                                    <span id="progress-bar"></span>
-                                </progress>
-                            </div>
-                            
-                            &lt;!&ndash; progress bar &ndash;&gt;
-                            <div class="text-white time mx-2" id="time"></div>
                         </div>
+                        <audio id="player1" controls class="music">
+                            <source src="./static/assets/musics/34.%20Flower%20Tower%20(Custom%20Music%20by%20Jimmy).mp3" type="audio/mp3" />
+                        </audio>
                     </div>
-                </figure> -->
+                </div> -->
             </div>
         </div>
-        
-        <!--  <ul id="video-controls" class="controls">
-             &lt;!&ndash;             <li> &ndash;&gt;
-             &lt;!&ndash;                 <button id="playpause" type="button">Play/Pause</button> &ndash;&gt;
-             &lt;!&ndash;             </li> &ndash;&gt;
-             &lt;!&ndash;             <li> &ndash;&gt;
-             &lt;!&ndash;                 <button id="stop" type="button">Stop</button> &ndash;&gt;
-             &lt;!&ndash;             </li> &ndash;&gt;
-             <li class="progress">
-                &lt;!&ndash;  <div id="bookmark_container"></div>
-                 <progress
-                     id="progress"
-                     value="0"
-                     min="0">
-                     <span id="progress-bar"></span>
-                 </progress> &ndash;&gt;
-                 &lt;!&ndash;                     <span class="bookmark" style="position:absolute;left: 90%;top: 0;bottom: 0;">|</span> &ndash;&gt;
-             </li>
-             &lt;!&ndash;             <li> &ndash;&gt;
-             &lt;!&ndash;                 <button id="mute" type="button">Mute/Unmute</button> &ndash;&gt;
-             &lt;!&ndash;             </li> &ndash;&gt;
-             <li>
-                 <button id="vol_up" type="button">Vol+</button>
-             </li>
-             <li>
-                 <button id="vol_down" type="button">Vol-</button>
-             </li>
-             <li>
-                 <button id="comment" type="button">comment</button>
-             </li>
-             <li>
-                 <button id="fs" type="button">Fullscreen</button>
-             </li>
-         </ul> -->
-    
     
         <script src="./static/assets/js/bootstrap.js"></script>
         <script src="./static/assets/js/bootstrap.bundle.js"></script>
@@ -137,15 +129,7 @@
     
         <script>
             window.addEventListener('load', function () {
-                let video = document.getElementById('player');
-                function togglePictureInPicture() {
-                    if (document.pictureInPictureElement) {
-                        document.exitPictureInPicture();
-                    } else if (document.pictureInPictureEnabled) {
-                        video.requestPictureInPicture();
-                    }
-                }
-                togglePictureInPicture()
+                let audio = new Plyr('#player1');
 
                 const player = new Plyr('#player', {
                     settings: ['captions', 'quality', 'speed'],
@@ -171,7 +155,6 @@
                         forced: true,
                         onChange: null
                     },
-                    title: 'ali ali ali',
                     previewThumbnails: {
                         enabled: false,
                         src: ''
@@ -198,9 +181,8 @@
                     },
                     clickToPlay: true
                 });
-    
-                console.log(Plyr);
                 
+                /* Adding comment bottom to player */
                 let comment = document.createElement('button');
                 comment.classList.add('plyr__controls__item')
                 comment.classList.add('plyr__control')
@@ -214,12 +196,31 @@
                 let control_bar = document.getElementsByClassName('plyr__controls')[0];
                 control_bar.appendChild(comment)
                 
+                
+                /* Add an event listener for comment bottom */
                 comment.addEventListener('click', function () {
                     let progress_bar = document.querySelector('div.plyr__progress');
                     let progress_input = progress_bar.childNodes[0];
                     let current_time = progress_input.getAttribute('aria-valuenow');
                     current_time = Math.floor(current_time * 100) / 100;
                     console.log(current_time);
+                });
+                
+                function toggle_animation(element) {
+                    if (element.classList.contains('paused'))
+                        element.classList.remove('paused')
+                    else
+                        element.classList.add('paused')
+                }
+                
+                audio.on('play', function () {
+                    let cover_image = document.getElementsByClassName('cover_image')[0];
+                    toggle_animation(cover_image)
+                });
+                
+                audio.on('pause', function () {
+                    let cover_image = document.getElementsByClassName('cover_image')[0];
+                    toggle_animation(cover_image)
                 });
                 
                 // player.source = {
@@ -232,127 +233,6 @@
                 //     ]
                 // };
                 
-                // setTimeout(function () {
-                //     let html = `<div class="video" style="position: absolute; top: 0px; left: 5px; font-size:10px; color: #fff; z-index:10">My Website Name</div>`;
-                //     let plyr_controls = document.querySelector('.plyr__controls');
-                //     plyr_controls.after(html);
-                // }, 2000);
-                
-                let b = document.querySelector('button[data-plyr="fullscreen"]');
-                b.addEventListener('click', function () {
-                    // let plyr_full_page = document.querySelector('div.plyr--full-ui');
-                    // let inner_html = plyr_full_page.innerHTML;
-                    // let item = `<h3 class="ali" style="color: red; position: absolute; z-index: 999">sdfe</h3>`;
-                    // let new_inner_html = item;
-                    // new_inner_html += inner_html;
-                    // plyr_full_page.innerHTML = new_inner_html;
-                    // console.log(plyr_full_page);
-                });
-                
-                
-                /*let container = document.getElementById('container');
-                let video = document.getElementById('video');
-                let fullscreen = document.getElementById('fs');
-                let play_pause = document.getElementById('play_pause');
-                let comment = document.getElementById('comment');
-                let progress = document.getElementById('progress');
-                let progressBar = document.getElementById('progress-bar');
-                let vol_up = document.getElementById('vol_up');
-                let vol_down = document.getElementById('vol_down');
-                
-                let style = window.getComputedStyle(progress, null).getPropertyValue('font-size');
-                let fontSize = parseFloat(style);
-                
-                let progress_container = document.getElementsByTagName('ul')[0];
-                let correct_width = video.getBoundingClientRect()['width'];
-                let a = correct_width / fontSize;
-                progress_container.style.width = `${correct_width}px`;
-                
-                video.addEventListener('ended', function () {
-                    let play = document.getElementsByClassName('play')[0];
-                    play.classList.remove('bi-stop-fill');
-                    play.classList.add('bi-play-fill');
-                });
-                
-                play_pause.addEventListener('click', (e) => {
-                    let play = document.getElementsByClassName('play')[0];
-                    if (video.paused || video.ended) {
-                        video.play();
-                        play.classList.remove('bi-play-fill');
-                        play.classList.add('bi-stop-fill');
-                    } else {
-                        video.pause();
-                        play.classList.remove('bi-stop-fill');
-                        play.classList.add('bi-play-fill');
-                    }
-                });
-                
-                
-                function change_volume(dir) {
-                    let current_volume = Math.floor(video.volume * 10) / 10;
-                    if (dir === '+' && current_volume < 1) {
-                        if (video.volume > 0.89)
-                            video.volume = 1;
-                        else
-                            video.volume += 0.1;
-                    } else if (dir === '-' && current_volume > 0) {
-                        if (video.volume < 0.11)
-                            video.volume = 0;
-                        else
-                            video.volume -= 0.1;
-                    }
-                }
-                
-                vol_up.addEventListener('click', function () {
-                    change_volume('+');
-                });
-                
-                vol_down.addEventListener('click', function () {
-                    change_volume('-');
-                });
-                
-                progress.setAttribute('max', video.duration);
-                
-                
-                let total_time = Math.floor(video.duration);
-                let current_time = Math.floor(video.currentTime);
-                let result = `${current_time} / ${total_time}`;
-                let time = document.getElementById('time');
-                time.innerHTML = result;
-                video.addEventListener('timeupdate', function () {
-                    let total_time = Math.floor(video.duration);
-                    let current_time = Math.floor(video.currentTime);
-                    let result = `${current_time} / ${total_time}`;
-                    let time = document.getElementById('time');
-                    time.innerHTML = result;
-                    progress.value = video.currentTime;
-                    
-                });
-                
-                progress.addEventListener('click', (e) => {
-                    let rect = progress.getBoundingClientRect();
-                    let pos = (e.pageX - rect.left) / progress.offsetWidth;
-                    video.currentTime = pos * video.duration;
-                });
-                
-                comment.addEventListener('click', function () {
-                    let current_point = (progress.value * 100) / video.duration;
-                    let bookmark_container = document.getElementById('bookmark_container');
-                    let current_second = Math.floor(progress.value);
-                    let item = `<span class="bookmark" title="${current_point} S" style="left: ${current_point}%;">|</span>`;
-                    bookmark_container.innerHTML += item;
-                });
-                
-                fullscreen.addEventListener('click', function () {
-                    if (container.requestFullScreen) {
-                        container.requestFullScreen();
-                        console.log('one');
-                    } else if (container.webkitRequestFullScreen) {
-                        container.webkitRequestFullScreen();
-                    } else if (container.mozRequestFullScreen) {
-                        container.mozRequestFullScreen();
-                    }
-                });*/
             });
         </script>
     </body>

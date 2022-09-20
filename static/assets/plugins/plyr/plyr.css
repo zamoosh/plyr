@@ -886,11 +886,11 @@ a.plyr__control {
 }
 
 .plyr--audio .plyr__controls {
-    background: #fff;
-    background: var(--plyr-audio-controls-background, #fff);
+    background: rgba(79, 79, 79, 0.16);
+    /*background: var(--plyr-audio-controls-background, #fff);*/
     border-radius: inherit;
-    color: #4a5464;
-    color: var(--plyr-audio-control-color, #4a5464);
+    color: #ffffff;
+    /*color: var(--plyr-audio-control-color, #4a5464);*/
     padding: 10px;
     padding: var(--plyr-control-spacing, 10px)
 }

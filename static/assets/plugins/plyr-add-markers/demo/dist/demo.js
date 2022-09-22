@@ -1,8 +1,574 @@
-typeof navigator === "object" && (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define('Plyr', factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Plyr = factory());
-})(this, (function () { 'use strict';
+typeof navigator === "object" && (function () {
+  'use strict';
+
+  // Setup tab focus
+  const container = document.getElementById('container');
+  const tabClassName = 'tab-focus'; // Remove class on blur
+
+  document.addEventListener('focusout', event => {
+    if (!event.target.classList || container.contains(event.target)) {
+      return;
+    }
+
+    event.target.classList.remove(tabClassName);
+  }); // Add classname to tabbed elements
+
+  document.addEventListener('keydown', event => {
+    if (event.keyCode !== 9) {
+      return;
+    } // Delay the adding of classname until the focus has changed
+    // This event fires before the focusin event
+
+
+    setTimeout(() => {
+      const focused = document.activeElement;
+
+      if (!focused || !focused.classList || container.contains(focused)) {
+        return;
+      }
+
+      focused.classList.add(tabClassName);
+    }, 10);
+  });
+
+  // Polyfill for creating CustomEvents on IE9/10/11
+  // code pulled from:
+  // https://github.com/d4tocchini/customevent-polyfill
+  // https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent#Polyfill
+  (function () {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      var ce = new window.CustomEvent('test', {
+        cancelable: true
+      });
+      ce.preventDefault();
+
+      if (ce.defaultPrevented !== true) {
+        // IE has problems with .preventDefault() on custom events
+        // http://stackoverflow.com/questions/23349191
+        throw new Error('Could not prevent default');
+      }
+    } catch (e) {
+      var CustomEvent = function (event, params) {
+        var evt, origPrevent;
+        params = params || {};
+        params.bubbles = !!params.bubbles;
+        params.cancelable = !!params.cancelable;
+        evt = document.createEvent('CustomEvent');
+        evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+        origPrevent = evt.preventDefault;
+
+        evt.preventDefault = function () {
+          origPrevent.call(this);
+
+          try {
+            Object.defineProperty(this, 'defaultPrevented', {
+              get: function () {
+                return true;
+              }
+            });
+          } catch (e) {
+            this.defaultPrevented = true;
+          }
+        };
+
+        return evt;
+      };
+
+      CustomEvent.prototype = window.Event.prototype;
+      window.CustomEvent = CustomEvent; // expose definition to window
+    }
+  })();
+
+  var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+  function createCommonjsModule(fn, module) {
+  	return module = { exports: {} }, fn(module, module.exports), module.exports;
+  }
+
+  (function (global) {
+    /**
+     * Polyfill URLSearchParams
+     *
+     * Inspired from : https://github.com/WebReflection/url-search-params/blob/master/src/url-search-params.js
+     */
+    var checkIfIteratorIsSupported = function () {
+      try {
+        return !!Symbol.iterator;
+      } catch (error) {
+        return false;
+      }
+    };
+
+    var iteratorSupported = checkIfIteratorIsSupported();
+
+    var createIterator = function (items) {
+      var iterator = {
+        next: function () {
+          var value = items.shift();
+          return {
+            done: value === void 0,
+            value: value
+          };
+        }
+      };
+
+      if (iteratorSupported) {
+        iterator[Symbol.iterator] = function () {
+          return iterator;
+        };
+      }
+
+      return iterator;
+    };
+    /**
+     * Search param name and values should be encoded according to https://url.spec.whatwg.org/#urlencoded-serializing
+     * encodeURIComponent() produces the same result except encoding spaces as `%20` instead of `+`.
+     */
+
+
+    var serializeParam = function (value) {
+      return encodeURIComponent(value).replace(/%20/g, '+');
+    };
+
+    var deserializeParam = function (value) {
+      return decodeURIComponent(String(value).replace(/\+/g, ' '));
+    };
+
+    var polyfillURLSearchParams = function () {
+      var URLSearchParams = function (searchString) {
+        Object.defineProperty(this, '_entries', {
+          writable: true,
+          value: {}
+        });
+        var typeofSearchString = typeof searchString;
+
+        if (typeofSearchString === 'undefined') ; else if (typeofSearchString === 'string') {
+          if (searchString !== '') {
+            this._fromString(searchString);
+          }
+        } else if (searchString instanceof URLSearchParams) {
+          var _this = this;
+
+          searchString.forEach(function (value, name) {
+            _this.append(name, value);
+          });
+        } else if (searchString !== null && typeofSearchString === 'object') {
+          if (Object.prototype.toString.call(searchString) === '[object Array]') {
+            for (var i = 0; i < searchString.length; i++) {
+              var entry = searchString[i];
+
+              if (Object.prototype.toString.call(entry) === '[object Array]' || entry.length !== 2) {
+                this.append(entry[0], entry[1]);
+              } else {
+                throw new TypeError('Expected [string, any] as entry at index ' + i + ' of URLSearchParams\'s input');
+              }
+            }
+          } else {
+            for (var key in searchString) {
+              if (searchString.hasOwnProperty(key)) {
+                this.append(key, searchString[key]);
+              }
+            }
+          }
+        } else {
+          throw new TypeError('Unsupported input\'s type for URLSearchParams');
+        }
+      };
+
+      var proto = URLSearchParams.prototype;
+
+      proto.append = function (name, value) {
+        if (name in this._entries) {
+          this._entries[name].push(String(value));
+        } else {
+          this._entries[name] = [String(value)];
+        }
+      };
+
+      proto.delete = function (name) {
+        delete this._entries[name];
+      };
+
+      proto.get = function (name) {
+        return name in this._entries ? this._entries[name][0] : null;
+      };
+
+      proto.getAll = function (name) {
+        return name in this._entries ? this._entries[name].slice(0) : [];
+      };
+
+      proto.has = function (name) {
+        return name in this._entries;
+      };
+
+      proto.set = function (name, value) {
+        this._entries[name] = [String(value)];
+      };
+
+      proto.forEach = function (callback, thisArg) {
+        var entries;
+
+        for (var name in this._entries) {
+          if (this._entries.hasOwnProperty(name)) {
+            entries = this._entries[name];
+
+            for (var i = 0; i < entries.length; i++) {
+              callback.call(thisArg, entries[i], name, this);
+            }
+          }
+        }
+      };
+
+      proto.keys = function () {
+        var items = [];
+        this.forEach(function (value, name) {
+          items.push(name);
+        });
+        return createIterator(items);
+      };
+
+      proto.values = function () {
+        var items = [];
+        this.forEach(function (value) {
+          items.push(value);
+        });
+        return createIterator(items);
+      };
+
+      proto.entries = function () {
+        var items = [];
+        this.forEach(function (value, name) {
+          items.push([name, value]);
+        });
+        return createIterator(items);
+      };
+
+      if (iteratorSupported) {
+        proto[Symbol.iterator] = proto.entries;
+      }
+
+      proto.toString = function () {
+        var searchArray = [];
+        this.forEach(function (value, name) {
+          searchArray.push(serializeParam(name) + '=' + serializeParam(value));
+        });
+        return searchArray.join('&');
+      };
+
+      global.URLSearchParams = URLSearchParams;
+    };
+
+    var checkIfURLSearchParamsSupported = function () {
+      try {
+        var URLSearchParams = global.URLSearchParams;
+        return new URLSearchParams('?a=1').toString() === 'a=1' && typeof URLSearchParams.prototype.set === 'function' && typeof URLSearchParams.prototype.entries === 'function';
+      } catch (e) {
+        return false;
+      }
+    };
+
+    if (!checkIfURLSearchParamsSupported()) {
+      polyfillURLSearchParams();
+    }
+
+    var proto = global.URLSearchParams.prototype;
+
+    if (typeof proto.sort !== 'function') {
+      proto.sort = function () {
+        var _this = this;
+
+        var items = [];
+        this.forEach(function (value, name) {
+          items.push([name, value]);
+
+          if (!_this._entries) {
+            _this.delete(name);
+          }
+        });
+        items.sort(function (a, b) {
+          if (a[0] < b[0]) {
+            return -1;
+          } else if (a[0] > b[0]) {
+            return +1;
+          } else {
+            return 0;
+          }
+        });
+
+        if (_this._entries) {
+          // force reset because IE keeps keys index
+          _this._entries = {};
+        }
+
+        for (var i = 0; i < items.length; i++) {
+          this.append(items[i][0], items[i][1]);
+        }
+      };
+    }
+
+    if (typeof proto._fromString !== 'function') {
+      Object.defineProperty(proto, '_fromString', {
+        enumerable: false,
+        configurable: false,
+        writable: false,
+        value: function (searchString) {
+          if (this._entries) {
+            this._entries = {};
+          } else {
+            var keys = [];
+            this.forEach(function (value, name) {
+              keys.push(name);
+            });
+
+            for (var i = 0; i < keys.length; i++) {
+              this.delete(keys[i]);
+            }
+          }
+
+          searchString = searchString.replace(/^\?/, '');
+          var attributes = searchString.split('&');
+          var attribute;
+
+          for (var i = 0; i < attributes.length; i++) {
+            attribute = attributes[i].split('=');
+            this.append(deserializeParam(attribute[0]), attribute.length > 1 ? deserializeParam(attribute[1]) : '');
+          }
+        }
+      });
+    } // HTMLAnchorElement
+
+  })(typeof commonjsGlobal !== 'undefined' ? commonjsGlobal : typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : commonjsGlobal);
+
+  (function (global) {
+    /**
+     * Polyfill URL
+     *
+     * Inspired from : https://github.com/arv/DOM-URL-Polyfill/blob/master/src/url.js
+     */
+    var checkIfURLIsSupported = function () {
+      try {
+        var u = new global.URL('b', 'http://a');
+        u.pathname = 'c d';
+        return u.href === 'http://a/c%20d' && u.searchParams;
+      } catch (e) {
+        return false;
+      }
+    };
+
+    var polyfillURL = function () {
+      var _URL = global.URL;
+
+      var URL = function (url, base) {
+        if (typeof url !== 'string') url = String(url); // Only create another document if the base is different from current location.
+
+        var doc = document,
+            baseElement;
+
+        if (base && (global.location === void 0 || base !== global.location.href)) {
+          doc = document.implementation.createHTMLDocument('');
+          baseElement = doc.createElement('base');
+          baseElement.href = base;
+          doc.head.appendChild(baseElement);
+
+          try {
+            if (baseElement.href.indexOf(base) !== 0) throw new Error(baseElement.href);
+          } catch (err) {
+            throw new Error('URL unable to set base ' + base + ' due to ' + err);
+          }
+        }
+
+        var anchorElement = doc.createElement('a');
+        anchorElement.href = url;
+
+        if (baseElement) {
+          doc.body.appendChild(anchorElement);
+          anchorElement.href = anchorElement.href; // force href to refresh
+        }
+
+        var inputElement = doc.createElement('input');
+        inputElement.type = 'url';
+        inputElement.value = url;
+
+        if (anchorElement.protocol === ':' || !/:/.test(anchorElement.href) || !inputElement.checkValidity() && !base) {
+          throw new TypeError('Invalid URL');
+        }
+
+        Object.defineProperty(this, '_anchorElement', {
+          value: anchorElement
+        }); // create a linked searchParams which reflect its changes on URL
+
+        var searchParams = new global.URLSearchParams(this.search);
+        var enableSearchUpdate = true;
+        var enableSearchParamsUpdate = true;
+
+        var _this = this;
+
+        ['append', 'delete', 'set'].forEach(function (methodName) {
+          var method = searchParams[methodName];
+
+          searchParams[methodName] = function () {
+            method.apply(searchParams, arguments);
+
+            if (enableSearchUpdate) {
+              enableSearchParamsUpdate = false;
+              _this.search = searchParams.toString();
+              enableSearchParamsUpdate = true;
+            }
+          };
+        });
+        Object.defineProperty(this, 'searchParams', {
+          value: searchParams,
+          enumerable: true
+        });
+        var search = void 0;
+        Object.defineProperty(this, '_updateSearchParams', {
+          enumerable: false,
+          configurable: false,
+          writable: false,
+          value: function () {
+            if (this.search !== search) {
+              search = this.search;
+
+              if (enableSearchParamsUpdate) {
+                enableSearchUpdate = false;
+
+                this.searchParams._fromString(this.search);
+
+                enableSearchUpdate = true;
+              }
+            }
+          }
+        });
+      };
+
+      var proto = URL.prototype;
+
+      var linkURLWithAnchorAttribute = function (attributeName) {
+        Object.defineProperty(proto, attributeName, {
+          get: function () {
+            return this._anchorElement[attributeName];
+          },
+          set: function (value) {
+            this._anchorElement[attributeName] = value;
+          },
+          enumerable: true
+        });
+      };
+
+      ['hash', 'host', 'hostname', 'port', 'protocol'].forEach(function (attributeName) {
+        linkURLWithAnchorAttribute(attributeName);
+      });
+      Object.defineProperty(proto, 'search', {
+        get: function () {
+          return this._anchorElement['search'];
+        },
+        set: function (value) {
+          this._anchorElement['search'] = value;
+
+          this._updateSearchParams();
+        },
+        enumerable: true
+      });
+      Object.defineProperties(proto, {
+        'toString': {
+          get: function () {
+            var _this = this;
+
+            return function () {
+              return _this.href;
+            };
+          }
+        },
+        'href': {
+          get: function () {
+            return this._anchorElement.href.replace(/\?$/, '');
+          },
+          set: function (value) {
+            this._anchorElement.href = value;
+
+            this._updateSearchParams();
+          },
+          enumerable: true
+        },
+        'pathname': {
+          get: function () {
+            return this._anchorElement.pathname.replace(/(^\/?)/, '/');
+          },
+          set: function (value) {
+            this._anchorElement.pathname = value;
+          },
+          enumerable: true
+        },
+        'origin': {
+          get: function () {
+            // get expected port from protocol
+            var expectedPort = {
+              'http:': 80,
+              'https:': 443,
+              'ftp:': 21
+            }[this._anchorElement.protocol]; // add port to origin if, expected port is different than actual port
+            // and it is not empty f.e http://foo:8080
+            // 8080 != 80 && 8080 != ''
+
+            var addPortToOrigin = this._anchorElement.port != expectedPort && this._anchorElement.port !== '';
+            return this._anchorElement.protocol + '//' + this._anchorElement.hostname + (addPortToOrigin ? ':' + this._anchorElement.port : '');
+          },
+          enumerable: true
+        },
+        'password': {
+          // TODO
+          get: function () {
+            return '';
+          },
+          set: function (value) {},
+          enumerable: true
+        },
+        'username': {
+          // TODO
+          get: function () {
+            return '';
+          },
+          set: function (value) {},
+          enumerable: true
+        }
+      });
+
+      URL.createObjectURL = function (blob) {
+        return _URL.createObjectURL.apply(_URL, arguments);
+      };
+
+      URL.revokeObjectURL = function (url) {
+        return _URL.revokeObjectURL.apply(_URL, arguments);
+      };
+
+      global.URL = URL;
+    };
+
+    if (!checkIfURLIsSupported()) {
+      polyfillURL();
+    }
+
+    if (global.location !== void 0 && !('origin' in global.location)) {
+      var getOrigin = function () {
+        return global.location.protocol + '//' + global.location.hostname + (global.location.port ? ':' + global.location.port : '');
+      };
+
+      try {
+        Object.defineProperty(global.location, 'origin', {
+          get: getOrigin,
+          enumerable: true
+        });
+      } catch (e) {
+        setInterval(function () {
+          global.location.origin = getOrigin();
+        }, 100);
+      }
+    }
+  })(typeof commonjsGlobal !== 'undefined' ? commonjsGlobal : typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : commonjsGlobal);
 
   function _defineProperty$1(obj, key, value) {
     if (key in obj) {
@@ -571,9 +1137,9 @@ typeof navigator === "object" && (function (global, factory) {
     element.hidden = hide;
   } // Mirror Element.classList.toggle, with IE compatibility for "force" argument
 
-  function toggleClass(element, className, force) {
+  function toggleClass$1(element, className, force) {
     if (is.nodeList(element)) {
-      return Array.from(element).map(e => toggleClass(e, className, force));
+      return Array.from(element).map(e => toggleClass$1(e, className, force));
     }
 
     if (is.element(element)) {
@@ -646,7 +1212,7 @@ typeof navigator === "object" && (function (global, factory) {
     }); // If we want to mimic keyboard focus via tab
 
     if (tabFocus) {
-      toggleClass(element, this.config.classNames.tabFocus);
+      toggleClass$1(element, this.config.classNames.tabFocus);
     }
   }
 
@@ -2021,7 +2587,7 @@ typeof navigator === "object" && (function (global, factory) {
 
       const visible = `${this.config.classNames.tooltip}--visible`;
 
-      const toggle = show => toggleClass(this.elements.display.seekTooltip, visible, show); // Hide on touch
+      const toggle = show => toggleClass$1(this.elements.display.seekTooltip, visible, show); // Hide on touch
 
 
       if (this.touch) {
@@ -2432,7 +2998,7 @@ typeof navigator === "object" && (function (global, factory) {
 
       toggleHidden(popup, !show); // Add class hook
 
-      toggleClass(this.elements.container, this.config.classNames.menu.open, show); // Focus the first item if key interaction
+      toggleClass$1(this.elements.container, this.config.classNames.menu.open, show); // Focus the first item if key interaction
 
       if (show && is.keyboardEvent(input)) {
         controls.focusFirstMenuItem.call(this, null, true);
@@ -2897,7 +3463,7 @@ typeof navigator === "object" && (function (global, factory) {
             },
 
             set(pressed = false) {
-              toggleClass(button, className, pressed);
+              toggleClass$1(button, className, pressed);
             }
 
           });
@@ -2927,8 +3493,8 @@ typeof navigator === "object" && (function (global, factory) {
         const selector = `${selectors.controls.wrapper} ${selectors.labels} .${classNames.hidden}`;
         const labels = getElements.call(this, selector);
         Array.from(labels).forEach(label => {
-          toggleClass(label, this.config.classNames.hidden, false);
-          toggleClass(label, this.config.classNames.tooltip, true);
+          toggleClass$1(label, this.config.classNames.hidden, false);
+          toggleClass$1(label, this.config.classNames.tooltip, true);
         });
       }
     },
@@ -2957,7 +3523,7 @@ typeof navigator === "object" && (function (global, factory) {
           const left = `${point.time / this.duration * 100}%`;
           const tipVisible = `${this.config.classNames.markers.tip}--visible`;
 
-          const toggle = show => toggleClass(markerTipElement, tipVisible, show);
+          const toggle = show => toggleClass$1(markerTipElement, tipVisible, show);
 
           markerPointElement.addEventListener('mouseenter', () => {
             // If there isn't a tooltip for the marker, don't show it
@@ -3153,7 +3719,7 @@ typeof navigator === "object" && (function (global, factory) {
 
 
       if (this.elements) {
-        toggleClass(this.elements.container, this.config.classNames.captions.enabled, !is.empty(tracks));
+        toggleClass$1(this.elements.container, this.config.classNames.captions.enabled, !is.empty(tracks));
       } // Update available languages in list
 
 
@@ -3205,7 +3771,7 @@ typeof navigator === "object" && (function (global, factory) {
         } // Add class hook
 
 
-        toggleClass(this.elements.container, activeClass, active);
+        toggleClass$1(this.elements.container, activeClass, active);
         this.captions.toggled = active; // Update settings menu
 
         controls.updateSetting.call(this, 'captions'); // Trigger event (not used internally)
@@ -3890,7 +4456,7 @@ typeof navigator === "object" && (function (global, factory) {
 
         document.body.style.overflow = toggle ? 'hidden' : ''; // Toggle class hook
 
-        toggleClass(this.target, this.player.config.classNames.fullscreen.fallback, toggle); // Force full viewport on iPhone X+
+        toggleClass$1(this.target, this.player.config.classNames.fullscreen.fallback, toggle); // Force full viewport on iPhone X+
 
         if (browser.isIos) {
           let viewport = document.head.querySelector('meta[name="viewport"]');
@@ -3960,7 +4526,7 @@ typeof navigator === "object" && (function (global, factory) {
         } // Add styling hook to show button
 
 
-        toggleClass(this.player.elements.container, this.player.config.classNames.fullscreen.enabled, this.enabled);
+        toggleClass$1(this.player.elements.container, this.player.config.classNames.fullscreen.enabled, this.enabled);
       });
 
       _defineProperty$1(this, "enter", () => {
@@ -4137,8 +4703,8 @@ typeof navigator === "object" && (function (global, factory) {
   // ==========================================================================
   const ui = {
     addStyleHook() {
-      toggleClass(this.elements.container, this.config.selectors.container.replace('.', ''), true);
-      toggleClass(this.elements.container, this.config.classNames.uiSupported, this.supported.ui);
+      toggleClass$1(this.elements.container, this.config.selectors.container.replace('.', ''), true);
+      toggleClass$1(this.elements.container, this.config.classNames.uiSupported, this.supported.ui);
     },
 
     // Toggle native HTML5 media controls
@@ -4198,13 +4764,13 @@ typeof navigator === "object" && (function (global, factory) {
 
       ui.checkPlaying.call(this); // Check for picture-in-picture support
 
-      toggleClass(this.elements.container, this.config.classNames.pip.supported, support.pip && this.isHTML5 && this.isVideo); // Check for airplay support
+      toggleClass$1(this.elements.container, this.config.classNames.pip.supported, support.pip && this.isHTML5 && this.isVideo); // Check for airplay support
 
-      toggleClass(this.elements.container, this.config.classNames.airplay.supported, support.airplay && this.isHTML5); // Add iOS class
+      toggleClass$1(this.elements.container, this.config.classNames.airplay.supported, support.airplay && this.isHTML5); // Add iOS class
 
-      toggleClass(this.elements.container, this.config.classNames.isIos, browser.isIos); // Add touch class
+      toggleClass$1(this.elements.container, this.config.classNames.isIos, browser.isIos); // Add touch class
 
-      toggleClass(this.elements.container, this.config.classNames.isTouch, this.touch); // Ready for API calls
+      toggleClass$1(this.elements.container, this.config.classNames.isTouch, this.touch); // Ready for API calls
 
       this.ready = true; // Ready event at end of execution stack
 
@@ -4256,7 +4822,7 @@ typeof navigator === "object" && (function (global, factory) {
 
     // Toggle poster
     togglePoster(enable) {
-      toggleClass(this.elements.container, this.config.classNames.posterEnabled, enable);
+      toggleClass$1(this.elements.container, this.config.classNames.posterEnabled, enable);
     },
 
     // Set the poster image (async)
@@ -4300,9 +4866,9 @@ typeof navigator === "object" && (function (global, factory) {
     // Check playing state
     checkPlaying(event) {
       // Class hooks
-      toggleClass(this.elements.container, this.config.classNames.playing, this.playing);
-      toggleClass(this.elements.container, this.config.classNames.paused, this.paused);
-      toggleClass(this.elements.container, this.config.classNames.stopped, this.stopped); // Set state
+      toggleClass$1(this.elements.container, this.config.classNames.playing, this.playing);
+      toggleClass$1(this.elements.container, this.config.classNames.paused, this.paused);
+      toggleClass$1(this.elements.container, this.config.classNames.stopped, this.stopped); // Set state
 
       Array.from(this.elements.buttons.play || []).forEach(target => {
         Object.assign(target, {
@@ -4327,7 +4893,7 @@ typeof navigator === "object" && (function (global, factory) {
 
       this.timers.loading = setTimeout(() => {
         // Update progress bar loading class state
-        toggleClass(this.elements.container, this.config.classNames.loading, this.loading); // Update controls visibility
+        toggleClass$1(this.elements.container, this.config.classNames.loading, this.loading); // Update controls visibility
 
         ui.toggleControls.call(this);
       }, this.loading ? 250 : 0);
@@ -4377,7 +4943,7 @@ typeof navigator === "object" && (function (global, factory) {
         } = player;
         player.touch = true; // Add touch class
 
-        toggleClass(elements.container, player.config.classNames.isTouch, true);
+        toggleClass$1(elements.container, player.config.classNames.isTouch, true);
       });
 
       _defineProperty$1(this, "setTabFocus", event => {
@@ -4402,7 +4968,7 @@ typeof navigator === "object" && (function (global, factory) {
         const removeCurrent = () => {
           const className = player.config.classNames.tabFocus;
           const current = getElements.call(player, `.${className}`);
-          toggleClass(current, className, false);
+          toggleClass$1(current, className, false);
         }; // Determine if a key was pressed to trigger this event
 
 
@@ -4424,7 +4990,7 @@ typeof navigator === "object" && (function (global, factory) {
               return;
             }
 
-            toggleClass(document.activeElement, player.config.classNames.tabFocus, true);
+            toggleClass$1(document.activeElement, player.config.classNames.tabFocus, true);
           }, 10);
         }
       });
@@ -4927,12 +5493,12 @@ typeof navigator === "object" && (function (global, factory) {
             timers
           } = player; // Skip transition to prevent focus from scrolling the parent element
 
-          toggleClass(elements.controls, config.classNames.noTransition, true); // Toggle
+          toggleClass$1(elements.controls, config.classNames.noTransition, true); // Toggle
 
           ui.toggleControls.call(player, true); // Restore transition
 
           setTimeout(() => {
-            toggleClass(elements.controls, config.classNames.noTransition, false);
+            toggleClass$1(elements.controls, config.classNames.noTransition, false);
           }, 0); // Delay a little more for mouse users
 
           const delay = this.touch ? 3000 : 4000; // Clear timer
@@ -5127,12 +5693,6 @@ typeof navigator === "object" && (function (global, factory) {
     } // Device is touch enabled
 
 
-  }
-
-  var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-  function createCommonjsModule(fn, module) {
-  	return module = { exports: {} }, fn(module, module.exports), module.exports;
   }
 
   var loadjs_umd = createCommonjsModule(function (module, exports) {
@@ -5468,7 +6028,7 @@ typeof navigator === "object" && (function (global, factory) {
     setup() {
       const player = this; // Add embed class for responsive
 
-      toggleClass(player.elements.wrapper, player.config.classNames.embed, true); // Can't set speed for dailymotion
+      toggleClass$1(player.elements.wrapper, player.config.classNames.embed, true); // Can't set speed for dailymotion
 
       player.options.speed = [1]; // Set intial ratio
 
@@ -5768,7 +6328,7 @@ typeof navigator === "object" && (function (global, factory) {
     setup() {
       const player = this; // Add embed class for responsive
 
-      toggleClass(player.elements.wrapper, player.config.classNames.embed, true); // Set speed options from config
+      toggleClass$1(player.elements.wrapper, player.config.classNames.embed, true); // Set speed options from config
 
       player.options.speed = player.config.speed.options; // Set intial ratio
 
@@ -6163,7 +6723,7 @@ typeof navigator === "object" && (function (global, factory) {
   const youtube = {
     setup() {
       // Add embed class for responsive
-      toggleClass(this.elements.wrapper, this.config.classNames.embed, true); // Setup API
+      toggleClass$1(this.elements.wrapper, this.config.classNames.embed, true); // Setup API
 
       if (is.object(window.YT) && is.function(window.YT.Player)) {
         youtube.ready.call(this);
@@ -6550,13 +7110,13 @@ typeof navigator === "object" && (function (global, factory) {
       } // Add type class
 
 
-      toggleClass(this.elements.container, this.config.classNames.type.replace('{0}', this.type), true); // Add provider class
+      toggleClass$1(this.elements.container, this.config.classNames.type.replace('{0}', this.type), true); // Add provider class
 
-      toggleClass(this.elements.container, this.config.classNames.provider.replace('{0}', this.provider), true); // Add video class for embeds
+      toggleClass$1(this.elements.container, this.config.classNames.provider.replace('{0}', this.provider), true); // Add video class for embeds
       // This will require changes if audio embeds are added
 
       if (this.isEmbed) {
-        toggleClass(this.elements.container, this.config.classNames.type.replace('{0}', 'video'), true);
+        toggleClass$1(this.elements.container, this.config.classNames.type.replace('{0}', 'video'), true);
       } // Inject the player wrapper
 
 
@@ -7972,7 +8532,7 @@ typeof navigator === "object" && (function (global, factory) {
 
           const force = typeof toggle === 'undefined' ? undefined : !toggle; // Apply and get updated state
 
-          const hiding = toggleClass(this.elements.container, this.config.classNames.hideControls, force); // Close menu
+          const hiding = toggleClass$1(this.elements.container, this.config.classNames.hideControls, force); // Close menu
 
           if (hiding && is.array(this.config.controls) && this.config.controls.includes('settings') && !is.empty(this.config.settings)) {
             controls.toggleMenu.call(this, false);
@@ -9106,6 +9666,211 @@ typeof navigator === "object" && (function (global, factory) {
 
   Plyr.defaults = cloneDeep(defaults);
 
-  return Plyr;
+  const sources = {
+    video: {
+      type: 'video',
+      title: 'View From A Blue Moon',
+      sources: [{
+        src: 'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-576p.mp4',
+        type: 'video/mp4',
+        size: 576
+      }, {
+        src: 'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-720p.mp4',
+        type: 'video/mp4',
+        size: 720
+      }, {
+        src: 'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
+        type: 'video/mp4',
+        size: 1080
+      }, {
+        src: 'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1440p.mp4',
+        type: 'video/mp4',
+        size: 1440
+      }],
+      poster: 'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.jpg',
+      tracks: [{
+        kind: 'captions',
+        label: 'English',
+        srclang: 'en',
+        src: 'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.en.vtt',
+        default: true
+      }, {
+        kind: 'captions',
+        label: 'French',
+        srclang: 'fr',
+        src: 'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.fr.vtt'
+      }],
+      previewThumbnails: {
+        src: ['https://cdn.plyr.io/static/demo/thumbs/100p.vtt', 'https://cdn.plyr.io/static/demo/thumbs/240p.vtt']
+      }
+    },
+    audio: {
+      type: 'audio',
+      title: 'Kishi Bashi &ndash; &ldquo;It All Began With A Burst&rdquo;',
+      sources: [{
+        src: 'https://cdn.plyr.io/static/demo/Kishi_Bashi_-_It_All_Began_With_a_Burst.mp3',
+        type: 'audio/mp3'
+      }, {
+        src: 'https://cdn.plyr.io/static/demo/Kishi_Bashi_-_It_All_Began_With_a_Burst.ogg',
+        type: 'audio/ogg'
+      }]
+    },
+    youtube: {
+      type: 'video',
+      sources: [{
+        src: 'https://youtube.com/watch?v=bTqVqk7FSmY',
+        provider: 'youtube'
+      }]
+    },
+    vimeo: {
+      type: 'video',
+      sources: [{
+        src: 'https://vimeo.com/40648169',
+        provider: 'vimeo'
+      }]
+    },
+    dailymotion: {
+      type: 'video',
+      sources: [{
+        src: 'https://www.dailymotion.com/video/x7tritx',
+        provider: 'dailymotion'
+      }]
+    }
+  };
 
-}));
+  // Toggle class on an element
+  const toggleClass = (element, className = '', toggle = false) => element && element.classList[toggle ? 'add' : 'remove'](className);
+
+  // ==========================================================================
+
+  (() => {
+    const production = 'plyr.io'; // Sentry for demo site (https://plyr.io) only
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const selector = '#player'; // Setup share buttons
+      // Shr.setup('.js-shr', {
+      //   count: {
+      //     className: 'button__count',
+      //   },
+      //   wrapper: {
+      //     className: 'button--with-count',
+      //   },
+      // });
+      // Setup the player
+
+      const player = new Plyr(selector, {
+        debug: true,
+        title: 'View From A Blue Moon',
+        iconUrl: 'dist/demo.svg',
+        keyboard: {
+          global: true
+        },
+        tooltips: {
+          controls: true
+        },
+        captions: {
+          active: true
+        },
+        ads: {
+          enabled: window.location.host.includes(production),
+          publisherId: '918848828995742'
+        },
+        previewThumbnails: {
+          enabled: true,
+          src: ['https://cdn.plyr.io/static/demo/thumbs/100p.vtt', 'https://cdn.plyr.io/static/demo/thumbs/240p.vtt']
+        },
+        vimeo: {
+          // Prevent Vimeo blocking plyr.io demo site
+          referrerPolicy: 'no-referrer'
+        },
+        markers: {
+          enabled: true,
+          points: [{
+            time: 10,
+            tip: 'first marker'
+          }, {
+            time: 40,
+            tip: 'second marker'
+          }, {
+            time: 120,
+            tipHTML: '<strong>third</strong> marker'
+          }]
+        }
+      }); // Expose for tinkering in the console
+
+      window.player = player; // Setup type toggle
+
+      const buttons = document.querySelectorAll('[data-source]');
+      const types = Object.keys(sources);
+      const historySupport = Boolean(window.history && window.history.pushState);
+      let currentType = window.location.hash.substring(1);
+      const hasInitialType = currentType.length;
+
+      function render(type) {
+        // Remove active classes
+        Array.from(buttons).forEach(button => toggleClass(button.parentElement, 'active', false)); // Set active on parent
+
+        toggleClass(document.querySelector(`[data-source="${type}"]`), 'active', true); // Show cite
+
+        Array.from(document.querySelectorAll('.plyr__cite')).forEach(cite => {
+          // eslint-disable-next-line no-param-reassign
+          cite.hidden = true;
+        });
+        document.querySelector(`.plyr__cite--${type}`).hidden = false;
+      } // Set a new source
+
+
+      function setSource(type, init) {
+        // Bail if new type isn't known, it's the current type, or current type is empty (video is default) and new type is video
+        if (!types.includes(type) || !init && type === currentType || !currentType.length && type === 'video') {
+          return;
+        } // Set the new source
+
+
+        player.source = sources[type]; // Set the current type for next time
+
+        currentType = type;
+        render(type);
+      } // Bind to each button
+
+
+      Array.from(buttons).forEach(button => {
+        button.addEventListener('click', () => {
+          const type = button.getAttribute('data-source');
+          setSource(type);
+
+          if (historySupport) {
+            window.history.pushState({
+              type
+            }, '', `#${type}`);
+          }
+        });
+      }); // List for backwards/forwards
+
+      window.addEventListener('popstate', event => {
+        if (event.state && Object.keys(event.state).includes('type')) {
+          setSource(event.state.type);
+        }
+      }); // If there's no current type set, assume video
+
+      if (!hasInitialType) {
+        currentType = 'video';
+      } // Replace current history state
+
+
+      if (historySupport && types.includes(currentType)) {
+        window.history.replaceState({
+          type: currentType
+        }, '', hasInitialType ? `#${currentType}` : '');
+      } // If it's not video, load the source
+
+
+      if (currentType !== 'video') {
+        setSource(currentType, true);
+      }
+
+      render(currentType);
+    });
+  })();
+
+})();

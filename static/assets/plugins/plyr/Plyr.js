@@ -74,6 +74,8 @@ class PlyrPlayer {
             modal.setAttribute('tabindex', '-1');
             modal.setAttribute('aria-labelledby', 'add_comment_modal');
             modal.setAttribute('aria-hidden', 'true');
+            modal.setAttribute('data-bs-keyboard', 'false');
+            modal.setAttribute('data-bs-backdrop', 'static');
             modal.innerHTML = `
                 <div class="modal-dialog">
                     <div class="modal-content">

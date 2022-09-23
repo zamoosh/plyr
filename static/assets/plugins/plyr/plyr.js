@@ -2971,6 +2971,8 @@ typeof navigator === "object" && (function (global, factory) {
               markerTipElement.innerHTML = point.tipHTML;
             } else {
               markerTipElement.innerText = point.tip;
+              markerTipElement.innerText += `\n`;
+              markerTipElement.innerText += `${Math.floor(this.currentTime * 100) / 100}`;
             }
 
             toggle(true);

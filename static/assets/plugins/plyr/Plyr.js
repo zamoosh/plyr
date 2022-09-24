@@ -69,7 +69,7 @@ class PlyrPlayer {
                 let tooltip = progress_bar.querySelector('span.plyr__tooltip');
                 tooltip.classList.add('plyr__tooltip--visible');
             });
-        
+            
         }
     }
     
@@ -121,14 +121,14 @@ class PlyrPlayer {
         video_wrapper.appendChild(modal);
         let commentModal = document.querySelector(comment.dataset.modal);
         this.add_comment = new bootstrap.Modal(commentModal);
-    
+        
         comment.addEventListener('click', function () {
             let progress_bar = comment.parentNode.querySelector('div.plyr__progress');
             let progress_input = progress_bar.childNodes[0];
             let current_time = progress_input.getAttribute('aria-valuenow');
             current_time = Math.floor(current_time * 10000) / 10000;
-        
-        
+            
+            
             let last_point = progress_bar.children[progress_bar.childElementCount - 2];
             if (last_point.classList.contains('plyr__marker__points')) {
                 let last_point_time = (Number(last_point.style.left.replace('%', '')) / 100) * player.player.duration;
@@ -174,7 +174,7 @@ class PlyrPlayer {
                         <h5 class="modal-title" id="comment_list_modal">points</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body d-flex flex-column">
                         ${this.player.markers.points}
                     </div>
                 </div>
@@ -222,12 +222,13 @@ class PlyrPlayer {
     }
     
     showAlert() {
+        let root_element = document.querySelector('div.plyr__video-wrapper');
         const toast = Toastify({
             text: "Already exists",
             duration: 3000,
             destination: "",
             newWindow: true,
-            selector: '.plyr__video-wrapper',
+            selector: root_element,
             close: true,
             gravity: "top", // `top` or `bottom`
             position: "center", // `left`, `center` or `right`
@@ -257,11 +258,17 @@ class PlyrPlayer {
         
         let comment_list_modal = this.comment_list._element;
         let comment_list_body = comment_list_modal.querySelector('div.modal-body');
-        let text = ``;
-        for (const point of this.player.markers.points) {
-            text += `<a class="jump" role="button" data-time="${this.player.currentTime}">${Math.floor(point.time * 100) / 100} -> ${point.tip}</a><br/>`;
-        }
-        comment_list_body.innerHTML = text;
+        let a = this.player.markers.points[this.player.markers.points.length - 1];
+        let point = document.createElement('a');
+        point.classList.add('jump');
+        point.role = 'button';
+        point.href = 'javascript:void(0)';
+        point.dataset.time = String(this.player.currentTime);
+        point.innerHTML = `${Math.floor(a.time * 100) / 100} -> ${a.tip}`;
+        // for (const point of this.player.markers.points) {
+        //     text += `<a class="jump" role="button" data-time="${this.player.currentTime}">${Math.floor(point.time * 100) / 100} -> ${point.tip}</a><br/>`;
+        // }
+        comment_list_body.appendChild(point);
         let player = this;
         document.querySelectorAll('a.jump').forEach(function (element) {
             element.addEventListener('click', function () {

@@ -1,0 +1,65 @@
+.jw-shortcuts-container {
+    .jw-switch {
+        position: relative;
+        display: flex;
+        align-items: center;
+        transition: ease-out 0.15s;
+        transition-property: opacity, background;
+        border-radius: 18px;
+        width: 80px;
+        height: 20px;
+        padding: 10px;
+        background: fade(#505050, 80%);
+        cursor: pointer;
+        font-size: inherit;
+        vertical-align: middle;
+        outline: none;
+
+        &.jw-tab-focus {
+            border: @ui-focus;
+        }
+
+        .jw-switch-knob {
+            position: absolute;
+            left: 1px;
+            transition: ease-out 0.15s;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+            border-radius: 13px;
+            width: 15px;
+            height: 15px;
+            background: @rightclick-shortcuts-secondary-bg;
+        }
+
+        .jw-switch-disabled,
+        .jw-switch-enabled {
+            position: absolute;
+            transition: inherit;
+            color: @rightclick-shortcuts-primary-text;
+        }
+
+        .jw-switch-disabled {
+            right: 8px;
+        }
+
+        .jw-switch-enabled {
+            left: 8px;
+            opacity: 0;
+        }
+
+        &[aria-checked="true"] {
+            background: #475470;
+
+            .jw-switch-disabled {
+                opacity: 0;
+            }
+
+            .jw-switch-enabled {
+                opacity: 1;
+            }
+
+            .jw-switch-knob {
+                left: 60px;
+            }
+        }
+    }
+}

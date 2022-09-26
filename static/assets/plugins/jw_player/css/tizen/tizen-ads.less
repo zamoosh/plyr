@@ -1,0 +1,58 @@
+@tizen-skip-font-size: 40px;
+
+@media (min-device-width: 2560px) {
+    @tizen-skip-font-size: 53.33px;
+}
+
+@media (min-device-width: 3840px) {
+    @tizen-skip-font-size: 80px;
+}
+
+.jw-tizen-app {
+    &.jw-flag-ads {
+        .jw-skip {
+            justify-content: center;
+            right: 10%;
+            height: 2.5em;
+            bottom: 9.72%;
+            background-color: transparent;
+            border-color: @white;
+            border-width: medium;
+            will-change: opacity;
+            font-size: @tizen-skip-font-size;
+
+            &:focus,
+            &.jw-active {
+                box-shadow: 0 0 0.25em 0.38em rgba(255, 255, 255, 0.3);
+            }
+
+            .jw-skip-icon {
+                display: flex;
+                justify-content: center;
+                height: 3.6em;
+                width: 3.6em;
+            }
+
+            .jw-svg-icon {
+                height: 2em;
+                width: 2em;
+            }
+        }
+
+        .jw-tizen-controlbar {
+            .jw-top-container {
+                display: none;
+            }
+
+            .jw-bottom-container {
+                .jw-slider-time {
+                    display: none;
+                }
+
+                .jw-text-alt {
+                    font-weight: normal;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,145 @@
+@tizen-controlbar-font-size: 40px;
+
+@media (min-device-width: 2560px) {
+    @tizen-controlbar-font-size: 53.33px;
+}
+
+@media (min-device-width: 3840px) {
+    @tizen-controlbar-font-size: 80px;
+}
+
+.jw-tizen-app {
+    .jw-tizen-controls {
+        will-change: opacity;
+    }
+
+    .jw-tizen-controlbar {
+        align-items: center;
+        justify-content: center;
+        padding: 6% 6.25%;
+        height: 100%;
+        max-height: initial;
+        font-size: @tizen-skip-font-size;
+
+        .jw-button-container {
+            display: none;
+        }
+
+        .jw-top-container {
+            display: flex;
+            flex-flow: row wrap;
+            position: absolute;
+            width: 100%;
+            border: none;
+            border-radius: 0;
+            background-size: auto;
+            box-shadow: none;
+            left: 0;
+            top: 0;
+            padding: inherit;
+        }
+
+        .jw-bottom-container {
+            display: flex;
+            flex-flow: row wrap;
+            position: absolute;
+            width: 100%;
+            border: none;
+            border-radius: 0;
+            background-size: auto;
+            box-shadow: none;
+            left: 0;
+            bottom: 0;
+            padding: inherit;
+            align-items: center;
+
+            &.jw-hidden {
+                display: none;
+            }
+        }
+
+        .jw-text {
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .jw-text-countdown {
+            display: flex;
+        }
+
+        // Controlbar Slider
+        .jw-slider-time {
+            height: initial;
+            width: initial;
+            flex-grow: 1;
+            padding: 0;
+
+            .jw-slider-container {
+                height: 0.38em;
+            }
+        }
+
+        // Controlbar Tooltips
+        .jw-active {
+            .jw-tooltip.jw-open {
+                margin-top: 15px;
+            }
+        }
+
+        // Controlbar Tooltips
+        .jw-tooltip {
+            box-shadow: none;
+            top: 100%;
+            visibility: hidden;
+
+            .jw-text {
+                font-size: 0.75em;
+                background-color: inherit;
+                color: rgba(255, 255, 255, 0.9);
+                padding-top: 0.25em;
+            }
+
+            &::after {
+                content: initial;
+            }
+
+            &.jw-open {
+                transition-delay: 0s;
+                visibility: visible;
+            }
+        }
+
+        // Live Text
+        .jw-text-live {
+            font-size: 1em;
+            width: auto;
+
+            &:before {
+                height: 0.5em;
+                width: 0.5em;
+                margin-right: 0.38em;
+            }
+        }
+    }
+
+    // Controls Gradient
+    .jw-controls-backdrop {
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, transparent 35%, transparent 65%, rgba(0, 0, 0, 0.4) 100%);
+    }
+
+    // Active Button
+    .jw-icon.jw-button-color {
+        &:focus,
+        &.jw-active {
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: @hover-color;
+            border: none;
+
+            .jw-tooltip {
+                visibility: visible;
+                opacity: 1;
+            }
+        }
+    }
+}

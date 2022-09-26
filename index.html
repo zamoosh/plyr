@@ -12,6 +12,9 @@
         <!-- PLYR CSS -->
         <link rel="stylesheet" href="./static/assets/plugins/plyr/plyr.css" />
         
+        <!-- JWPLAYWE CSS -->
+        <!-- <link rel="stylesheet" href="./static/assets/plugins/jw_player/css/jwplayer.less" /> -->
+        
         <!-- TOASTIFY CSS -->
         <link rel="stylesheet" href="./static/assets/plugins/toastify/toastify.css" />
         
@@ -40,7 +43,7 @@
                 background-color: rgba(44, 38, 38, 0.46);
                 border-radius: 5px 5px 0 0;
             }
-
+            
             @keyframes round {
                 from {
                     transform: rotate(0deg);
@@ -75,9 +78,20 @@
                        crossorigin
                        id="player"
                        data-poster="">
-                    <source src="./static/assets/videos/sea_640.mp4" type="video/mp4" size="640" />
+                    <!-- <source src="./static/assets/videos/sea_640.mp4" type="video/mp4" size="640" />
                     <source src="./static/assets/videos/sea_960.mp4" type="video/mp4" size="960" />
-                    <source src="./static/assets/videos/sea_1280.mp4" type="video/mp4" size="1280" />
+                    <source src="./static/assets/videos/sea_1280.mp4" type="video/mp4" size="1280" /> -->
+                    
+                    <source src="https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"
+                            type="application/x-mpegURL"
+                            size="640" />
+                    <source src="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+                            type="application/x-mpegURL"
+                            size="1980" />
+                    <source src="./static/assets/videos/sea/full_hd/sea_full_hd.m3u8"
+                            type="application/x-mpegURL"
+                            size="1980" />
+                    <source src="./static/assets/videos/sea/hd/sea_hd.m3u8" type="application/x-mpegURL" size="1280" />
                     
                     <!-- Captions are optional -->
                     <!-- <track kind="captions" label="English captions" src="/path/to/captions.vtt" srclang="en" default /> -->
@@ -110,41 +124,22 @@
                 <br><br><br><br><br><br><br><br><br><br> -->
             </div>
         </div>
-
-        <!-- MODAL FOR ADDING COMMENT -->
-        <!-- <div class="modal fade" id="add_comment" tabindex="-1" aria-labelledby="add_comment_modal" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="add_comment_modal">Modal title</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form name="set_tip">
-                            <div class="mb-3">
-                                <label for="tip" class="form-label">point tip</label>
-                                <input type="text" class="form-control" name="tip" id="tip">
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary btn-sm">Save changes</button>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-    
+        
         <!-- BOOTSTRAP JS -->
         <script src="./static/assets/js/bootstrap.js"></script>
         <script src="./static/assets/js/bootstrap.bundle.js"></script>
-    
+        
         <!-- JQUERY -->
         <!-- <script src="./static/assets/plugins/jquery/jquery-3.6.1.min.js"></script> -->
         
         <!-- PLYR JS -->
         <script src="./static/assets/plugins/plyr/plyr.js"></script>
-<!--         <script src="./static/assets/plugins/plyr/plyr.polyfilled.js"></script> -->
+        
+        <!-- HLS JS -->
+        <script src="./static/assets/plugins/hls/hls.js"></script>
+        
+        <!-- JWPLAYER JS -->
+        <!-- <script  src="./static/assets/plugins/jw_player/js/jwplayer.js/"></script> -->
         
         <!-- CUSTOM PLYR JS -->
         <script src="./static/assets/plugins/plyr/Plyr.js"></script>
@@ -152,13 +147,75 @@
         <!-- TOASTIFY JS -->
         <script src="./static/assets/plugins/toastify/toastify.js"></script>
         <script>
-            window.addEventListener('load', function () {
-                let player = new PlyrPlayer('#player');
+            document.addEventListener('DOMContentLoaded', function () {
+                const source = 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8';
+                const video = document.querySelector('video');
+                const defaultOptions = {};
+                
+                
+                if (!Hls.isSupported()) {
+                    video.src = source;
+                    var player = new Plyr(video, defaultOptions);
+                } else {
+                    // For more Hls.js options, see https://github.com/dailymotion/hls.js
+                    const hls = new Hls();
+                    hls.loadSource(source);
+                    
+                    // From the m3u8 playlist, hls parses the manifest and returns
+                    // all available video qualities. This is important, in this approach,
+                    // we will have one source on the Plyr player.
+                    hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+                        
+                        // Transform available levels into an array of integers (height values).
+                        const availableQualities = hls.levels.map((l) => l.height);
+                        availableQualities.unshift(0); //prepend 0 to quality array
+                        
+                        // Add new qualities to option
+                        defaultOptions.quality = {
+                            default: 0, //Default - AUTO
+                            options: availableQualities,
+                            forced: true,
+                            onChange: (e) => updateQuality(e)
+                        };
+                        // Add Auto Label
+                        defaultOptions.i18n = {
+                            qualityLabel: {
+                                0: 'Auto'
+                            }
+                        };
+                        
+                        hls.on(Hls.Events.LEVEL_SWITCHED, function (event, data) {
+                            var span = document.querySelector(".plyr__menu__container [data-plyr='quality'][value='0'] span");
+                            if (hls.autoLevelEnabled) {
+                                span.innerHTML = `AUTO (${hls.levels[data.level].height}p)`;
+                            } else {
+                                span.innerHTML = `AUTO`;
+                            }
+                        });
+                        
+                        // Initialize new Plyr player with quality options
+                        var player = new Plyr(video, defaultOptions);
+                    });
+    
+                    hls.attachMedia(video);
+                    window.hls = hls;
+                }
+    
+                function updateQuality(newQuality) {
+                    if (newQuality === 0) {
+                        window.hls.currentLevel = -1; //Enable AUTO quality if option.value = 0
+                    } else {
+                        window.hls.levels.forEach((level, levelIndex) => {
+                            if (level.height === newQuality) {
+                                console.log("Found quality match with " + newQuality);
+                                window.hls.currentLevel = levelIndex;
+                            }
+                        });
+                    }
+                }
+                
+                
                 // let audio = new Plyr('#player1');
-                
-                
-                
-                
                 // function toggle_animation(element) {
                 //     if (element.classList.contains('paused'))
                 //         element.classList.remove('paused')

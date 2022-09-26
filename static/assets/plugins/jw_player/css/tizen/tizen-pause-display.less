@@ -1,0 +1,48 @@
+@tizen-pause-display-font-size: 80px;
+
+@media (min-device-width: 2560px) {
+    @tizen-pause-display-font-size: 106.67px;
+}
+
+@media (min-device-width: 3840px) {
+    @tizen-pause-display-font-size: 160px;
+}
+
+.jw-tizen-app {
+    .jw-tizen-controls {
+        height: 100%;
+
+        .jw-pause-display {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 2;
+            display: none;
+
+            .jw-pause-display-container {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                padding: 0 6.25% 15%;
+                width: 100%;
+                font-size: @tizen-pause-display-font-size;
+
+                .jw-pause-title {
+                    font-size: 1em;
+                    font-weight: bold;
+                    width: 90%;
+                    color: rgba(255, 255, 255, 0.9);
+                    padding-bottom: 1.85%;
+                }
+
+                .jw-pause-description {
+                    font-size: 0.5em;
+                    width: 60%;
+                    color: rgba(255, 255, 255, 0.8);
+                    font-weight: normal;
+                }
+            }
+        }
+    }
+}

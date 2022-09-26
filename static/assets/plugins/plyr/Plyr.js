@@ -16,7 +16,7 @@ class PlyrPlayer {
                 'airplay',
                 'fullscreen'
             ],
-            hideControls: false,
+            hideControls: true,
             keyboard: {
                 global: true
             },
@@ -265,15 +265,10 @@ class PlyrPlayer {
         point.href = 'javascript:void(0)';
         point.dataset.time = String(this.player.currentTime);
         point.innerHTML = `${Math.floor(a.time * 100) / 100} -> ${a.tip}`;
-        // for (const point of this.player.markers.points) {
-        //     text += `<a class="jump" role="button" data-time="${this.player.currentTime}">${Math.floor(point.time * 100) / 100} -> ${point.tip}</a><br/>`;
-        // }
         comment_list_body.appendChild(point);
         let player = this;
-        document.querySelectorAll('a.jump').forEach(function (element) {
-            element.addEventListener('click', function () {
-                player.player.currentTime = Number(this.dataset.time);
-            });
+        point.addEventListener('click', function () {
+            player.player.currentTime = Number(point.dataset.time);
         });
     }
     

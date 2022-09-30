@@ -1,61 +1,113 @@
+/** Note: the purpose of this library is that the plyr have extra options
+ like adding comments in progressbar and a list of comments, so you can
+ jump to that point. Please include the below dependencies in your main html
+ file.
+ 
+ You can edit main options of original plyr in line: 55
+ */
+
+// HLS player is required. https://github.com/video-dev/hls.js/
+// bootstrap latest version is required. https://getbootstrap.com/
+// bootstrap icons is required. https://icons.getbootstrap.com/
+
 class PlyrPlayer {
-    constructor(selector) {
-        this.player = new Plyr(selector, {
-            settings: ['captions', 'quality', 'speed'],
-            controls: [
-                'play-large',
-                'play',
-                'rewind',
-                'fast-forward',
-                'restart',
-                'progress',
-                'current-time',
-                'mute', 'volume',
-                'captions',
-                'settings', 'pip',
-                'airplay',
-                'fullscreen'
-            ],
-            hideControls: true,
-            keyboard: {
-                global: true
-            },
-            quality: {
-                default: 1280,
-                // The options to display in the UI, if available for the source media
-                options: [1280, 960, 640],
-                forced: true,
-                onChange: null
-            },
-            previewThumbnails: {
-                enabled: false,
-                src: ''
-            },
-            speed: {
-                selected: 1,
-                options: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4]
-            },
-            markers: {
-                enabled: true,
-                points: []
-            },
-            captions: {
-                active: false,
-                language: 'auto',
-                update: false
-            },
-            tooltips: {
-                controls: true,
-                seek: true
-            },
-            clickToPlay: false
-        });
+    constructor(selector, videoSource) {
+        this.defaultOptions = {};
         
-        this.preventForm();
-        this.addComment();
-        this.addCommentList();
+        // note that we use player as this in this class 👇
+        let player = this;
+        
+        // We consider Hls is supported
+        const video = document.querySelector('video');
+        const hls = new Hls();
+        hls.loadSource(videoSource);
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+            
+            // Transform available levels into an array of integers (height values).
+            const availableQualities = hls.levels.map((l) => l.height);
+            availableQualities.unshift(0); //prepend 0 to quality array
+            
+            // Add new qualities to option
+            player.defaultOptions.quality = {
+                default: 0, //Default - AUTO
+                options: availableQualities,
+                forced: true,
+                onChange: (e) => PlyrPlayer.updateQuality(e)
+            };
+            // Add Auto Label
+            player.defaultOptions.i18n = {
+                qualityLabel: {
+                    0: 'Auto'
+                }
+            };
+            
+            hls.on(Hls.Events.LEVEL_SWITCHED, function (event, data) {
+                let span = document.querySelector(".plyr__menu__container [data-plyr='quality'][value='0'] span");
+                if (hls.autoLevelEnabled) {
+                    span.innerHTML = `AUTO (${hls.levels[data.level].height}p)`;
+                } else {
+                    span.innerHTML = `AUTO`;
+                }
+            });
+            
+            // Initialize new Plyr player with quality options
+            player.player = new Plyr(selector, {
+                settings: ['captions', 'quality', 'speed'],
+                controls: [
+                    'play-large',
+                    'play',
+                    'rewind',
+                    'fast-forward',
+                    'restart',
+                    'progress',
+                    'current-time',
+                    'mute', 'volume',
+                    'captions',
+                    'settings', 'pip',
+                    'airplay',
+                    'fullscreen'
+                ],
+                hideControls: true,
+                keyboard: {
+                    global: true
+                },
+                i18n: player.defaultOptions.i18n,
+                quality: player.defaultOptions.quality,
+                previewThumbnails: {
+                    enabled: false,
+                    src: ''
+                },
+                speed: {
+                    selected: 1,
+                    options: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4]
+                },
+                markers: {
+                    enabled: true,
+                    points: []
+                },
+                captions: {
+                    active: false,
+                    language: 'auto',
+                    update: false
+                },
+                tooltips: {
+                    controls: true,
+                    seek: true
+                },
+                clickToPlay: false
+            });
+            
+            player.preventForm();
+            player.addComment();
+            player.addCommentList();
+            
+        });
+        hls.attachMedia(video);
+        window.hls = hls;
     }
     
+    // updates the points on hover
     updateTooltip() {
         let points = document.getElementsByClassName('plyr__marker__points');
         for (let i = 0; i < points.length; i++) {
@@ -247,15 +299,8 @@ class PlyrPlayer {
         return {time: time, tip: tip};
     }
     
-    setMarker(tip) {
-        let marker = PlyrPlayer.createMarker(this.player.currentTime, tip);
-        this.player.markers = {
-            points: [
-                ...this.player.markers.points, marker
-            ]
-        };
-        this.updateTooltip();
-        
+    // add a jump point to the comment list modal
+    addPoint() {
         let comment_list_modal = this.comment_list._element;
         let comment_list_body = comment_list_modal.querySelector('div.modal-body');
         let a = this.player.markers.points[this.player.markers.points.length - 1];
@@ -272,4 +317,28 @@ class PlyrPlayer {
         });
     }
     
+    setMarker(tip) {
+        let marker = PlyrPlayer.createMarker(this.player.currentTime, tip);
+        this.player.markers = {
+            points: [
+                ...this.player.markers.points, marker
+            ]
+        };
+        this.updateTooltip();
+        this.addPoint();
+    }
+    
+    // this method updates the quality for the PlyrPlayer object
+    static updateQuality(newQuality) {
+        if (newQuality === 0) {
+            window.hls.currentLevel = -1; //Enable AUTO quality if option.value = 0
+        } else {
+            window.hls.levels.forEach((level, levelIndex) => {
+                if (level.height === newQuality) {
+                    console.log("Found quality match with " + newQuality);
+                    window.hls.currentLevel = levelIndex;
+                }
+            });
+        }
+    }
 }

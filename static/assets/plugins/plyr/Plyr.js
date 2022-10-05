@@ -1,5 +1,5 @@
 /** Note: the purpose of this library is that the plyr have extra options
- like adding comments in progressbar and a list of comments, so you can
+ like adding comments in progressbar and have a list of comments(points), so you can
  jump to that point. Please include the below dependencies in your main html
  file.
  
@@ -18,6 +18,7 @@ class PlyrPlayer {
         let player = this;
         
         // We consider Hls is supported
+        // also you need a video tah in your html page
         const video = document.querySelector('video');
         const hls = new Hls();
         hls.loadSource(videoSource);
@@ -68,6 +69,7 @@ class PlyrPlayer {
                     'airplay',
                     'fullscreen'
                 ],
+                disableContextMenu: false,
                 hideControls: true,
                 keyboard: {
                     global: true
@@ -101,10 +103,22 @@ class PlyrPlayer {
             player.preventForm();
             player.addComment();
             player.addCommentList();
+            player.customContextMenu();
             
         });
         hls.attachMedia(video);
         window.hls = hls;
+    }
+    
+    // act a thing when the context menu clicked on PlyrPlayer
+    customContextMenu() {
+        let items = document.querySelectorAll('div.plyr__controls, div.plyr__video-wrapper, button.plyr__control--overlaid, div.side-menu, button.menu');
+        items.forEach(function (item) {
+            item.addEventListener('contextmenu', function (e) {
+                e.preventDefault();
+                console.log(e.clientX, e.clientY);
+            });
+        });
     }
     
     // updates the points on hover
@@ -198,7 +212,7 @@ class PlyrPlayer {
     }
     
     addCommentList() {
-        let player = this;
+        /*let player = this;
         let control_bars = document.getElementsByClassName('plyr__controls')[0];
         let comment_list = document.createElement('button');
         comment_list.classList.add('plyr__controls__item', 'plyr__control');
@@ -240,7 +254,79 @@ class PlyrPlayer {
         comment_list.addEventListener('click', function () {
             player.showModal(this);
         });
-        control_bars.appendChild(comment_list);
+        control_bars.appendChild(comment_list);*/
+        
+        let player_full_ui = document.querySelector('div.plyr.plyr--full-ui.plyr--video');
+        let menu = document.createElement('button');
+        menu.classList.add('plyr__controls__item', 'plyr__control', 'menu');
+        menu.style.cssText = `
+        z-index: 5;
+        position: absolute;
+        right: 5px;
+        top: 5px
+        `;
+        menu.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+            </svg>
+        `;
+        player_full_ui.appendChild(menu);
+        
+        let commentList = document.createElement('div');
+        commentList.classList.add('side-menu');
+        commentList.style.position = 'absolute';
+        commentList.style.height = '100%';
+        commentList.style.right = '0';
+        commentList.style.zIndex = '4';
+        commentList.style.transition = 'all 0.3s';
+        commentList.style.backgroundColor = '#262626b8';
+        commentList.style.visibility = 'hidden';
+        commentList.style.overflowY = 'auto';
+        player_full_ui.appendChild(commentList);
+        
+        
+        function closeSideMenu() {
+            commentList.style.width = '0';
+            commentList.style.visibility = 'hidden';
+            commentList.ariaExpanded = 'false';
+            menu.style.right = '10px';
+            menu.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                </svg>
+            `;
+        }
+        
+        function openSideMenu() {
+            commentList.style.width = '30%';
+            commentList.style.visibility = 'visible';
+            commentList.ariaExpanded = 'true';
+            menu.style.right = '26.5%';
+            menu.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
+                  <path style="color: white" fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                </svg>
+            `;
+        }
+        
+        menu.addEventListener('click', function () {
+            // commentList.ariaExpanded = true;
+            if (commentList.ariaExpanded === 'true') {
+                closeSideMenu();
+            } else {
+                openSideMenu();
+            }
+        });
+        let content = document.createElement('div');
+        content.style.padding = '35px 10px 10px 10px';
+        content.style.width = '100%';
+        content.style.color = 'white';
+        content.style.overflowWrap = 'break-word';
+        content.style.overflowY = 'auto';
+        content.style.display = 'flex';
+        content.style.flexDirection = 'column';
+        commentList.appendChild(content);
+        this.commentList = commentList;
     }
     
     preventForm() {
@@ -301,8 +387,6 @@ class PlyrPlayer {
     
     // add a jump point to the comment list modal
     addPoint() {
-        let comment_list_modal = this.comment_list._element;
-        let comment_list_body = comment_list_modal.querySelector('div.modal-body');
         let a = this.player.markers.points[this.player.markers.points.length - 1];
         let point = document.createElement('a');
         point.classList.add('jump');
@@ -310,7 +394,8 @@ class PlyrPlayer {
         point.href = 'javascript:void(0)';
         point.dataset.time = String(this.player.currentTime);
         point.innerHTML = `${Math.floor(a.time * 100) / 100} -> ${a.tip}`;
-        comment_list_body.appendChild(point);
+        let content = this.commentList.firstChild;
+        content.appendChild(point);
         let player = this;
         point.addEventListener('click', function () {
             player.player.currentTime = Number(point.dataset.time);
@@ -335,7 +420,6 @@ class PlyrPlayer {
         } else {
             window.hls.levels.forEach((level, levelIndex) => {
                 if (level.height === newQuality) {
-                    console.log("Found quality match with " + newQuality);
                     window.hls.currentLevel = levelIndex;
                 }
             });

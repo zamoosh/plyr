@@ -60,11 +60,11 @@ class PlyrPlayer {
                     'play',
                     'rewind',
                     'fast-forward',
-                    'restart',
+                    // 'restart',
                     'progress',
                     'current-time',
                     'mute', 'volume',
-                    'captions',
+                    // 'captions',
                     'settings', 'pip',
                     'airplay',
                     'fullscreen'
@@ -99,6 +99,30 @@ class PlyrPlayer {
                 },
                 clickToPlay: false
             });
+            
+            /*let inp = document.querySelector('[data-plyr="volume"]');
+            let volumeContainer = document.querySelector('div.plyr__volume');
+            volumeContainer.style.display = 'contents';
+            volumeContainer.style.transition = 'all 0.3s';
+            inp.style.transition = 'all 0.3s';
+            inp.style.display = 'none';
+            inp.style.visibility = 'hidden';
+            volumeContainer.addEventListener('mouseover', function () {
+                volumeContainer.style.display = 'flex';
+                inp.style.display = 'block';
+                inp.style.visibility = 'visible';
+            });
+            
+            volumeContainer.addEventListener('mouseleave', function () {
+                volumeContainer.style.display = 'contents';
+                inp.style.display = 'none';
+                inp.style.visibility = 'hidden';
+            });
+            
+            volumeContainer.addEventListener('touch', function () {
+                console.log('uh... yes!');
+            });*/
+            
             
             player.preventForm();
             player.addComment();
@@ -153,7 +177,7 @@ class PlyrPlayer {
             <span class="label--not-pressed plyr__tooltip">Add comment</span>
         `;
         
-        let video_wrapper = document.querySelector('div.plyr__video-wrapper');
+        // let video_wrapper = document.querySelector('div.plyr__video-wrapper');
         let modal = document.createElement(`div`);
         modal.classList.add('modal', 'fade');
         modal.setAttribute('id', 'add_comment');
@@ -184,11 +208,14 @@ class PlyrPlayer {
                 </div>
             </div>
         `;
-        video_wrapper.appendChild(modal);
+        // video_wrapper.appendChild(modal);
+        document.body.appendChild(modal);
         let commentModal = document.querySelector(comment.dataset.modal);
         this.add_comment = new bootstrap.Modal(commentModal);
         
         comment.addEventListener('click', function () {
+            player.player.pause();
+            player.player.fullscreen.exit();
             let progress_bar = comment.parentNode.querySelector('div.plyr__progress');
             let progress_input = progress_bar.childNodes[0];
             let current_time = progress_input.getAttribute('aria-valuenow');
@@ -255,7 +282,7 @@ class PlyrPlayer {
             player.showModal(this);
         });
         control_bars.appendChild(comment_list);*/
-        
+        let player = this;
         let player_full_ui = document.querySelector('div.plyr.plyr--full-ui.plyr--video');
         let menu = document.createElement('button');
         menu.classList.add('plyr__controls__item', 'plyr__control', 'menu');
@@ -276,7 +303,8 @@ class PlyrPlayer {
         commentList.classList.add('side-menu');
         commentList.style.position = 'absolute';
         commentList.style.height = '100%';
-        commentList.style.right = '0';
+        commentList.style.right = '0px';
+        commentList.style.width = '0px';
         commentList.style.zIndex = '4';
         commentList.style.transition = 'all 0.3s';
         commentList.style.backgroundColor = '#262626b8';
@@ -301,7 +329,12 @@ class PlyrPlayer {
             commentList.style.width = '30%';
             commentList.style.visibility = 'visible';
             commentList.ariaExpanded = 'true';
-            menu.style.right = '26.5%';
+            let right = commentList.parentElement.getBoundingClientRect().width * 30 / 100 - (menu.getBoundingClientRect().width + 7);
+            right = (right * 100) / commentList.parentElement.getBoundingClientRect().width;
+            menu.style.right = `${right}%`;
+            commentList.parentElement.addEventListener('ratechange', function () {
+                console.log('changed');
+            });
             menu.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
                   <path style="color: white" fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
@@ -311,6 +344,7 @@ class PlyrPlayer {
         
         menu.addEventListener('click', function () {
             // commentList.ariaExpanded = true;
+            player.player.pause();
             if (commentList.ariaExpanded === 'true') {
                 closeSideMenu();
             } else {
@@ -389,7 +423,7 @@ class PlyrPlayer {
     addPoint() {
         let a = this.player.markers.points[this.player.markers.points.length - 1];
         let point = document.createElement('a');
-        point.classList.add('jump');
+        point.classList.add('text-white');
         point.role = 'button';
         point.href = 'javascript:void(0)';
         point.dataset.time = String(this.player.currentTime);
